@@ -1,4 +1,5 @@
 using Barbearia.Api.Data;
+using Barbearia.Api.Models;
 using Barbearia.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,10 +9,24 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
+
 builder.Services.AddDbContext<BarbeariaDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("BarbeariaDb")));
 
 builder.Services.AddScoped<AgendamentoService>();
+
+const string PoliticaFrontEnd = "PoliticaFrontEnd";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(PoliticaFrontEnd, policy =>
+    {
+        policy.WithOrigins("http://localhost:5057", "https://localhost:7248")
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 var app = builder.Build();
 
@@ -23,9 +38,25 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors(PoliticaFrontEnd);
+
 app.MapGet("/hello", () => "Olá, mundo! A API da Barbearia está no ar! 💈");
 
+app.MapGet("/barbeiros", async (BarbeariaDbContext contexto) =>
+    await contexto.Barbeiros.ToListAsync());
+
+app.MapGet("/clientes", async (BarbeariaDbContext contexto) =>
+    await contexto.Clientes.ToListAsync());
+
 var agendamentos = app.MapGroup("/agendamentos");
+
+agendamentos.MapGet("/", async (BarbeariaDbContext contexto) =>
+    await contexto.Agendamentos
+        .Include(a => a.Cliente)
+        .Include(a => a.Barbeiro)
+        .Where(a => a.Status == StatusAgendamento.Confirmado)
+        .OrderBy(a => a.Data).ThenBy(a => a.Hora)
+        .ToListAsync());
 
 agendamentos.MapGet("/horarios-disponiveis", async (int barbeiroId, DateOnly data, AgendamentoService service) =>
 {
