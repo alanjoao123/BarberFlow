@@ -6,6 +6,9 @@
 # Configurações locais do assistente Claude Code (não é código do projeto)
 .claude/
 
+# Relatórios gerados ao rodar "dotnet test" com cobertura de código
+TestResults/
+
 # dotenv files
 .env
 
