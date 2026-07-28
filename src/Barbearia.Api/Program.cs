@@ -1,4 +1,5 @@
 using Barbearia.Api.Data;
+using Barbearia.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,8 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<BarbeariaDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("BarbeariaDb")));
+
+builder.Services.AddScoped<AgendamentoService>();
 
 var app = builder.Build();
 
@@ -22,28 +25,40 @@ app.UseHttpsRedirection();
 
 app.MapGet("/hello", () => "Olá, mundo! A API da Barbearia está no ar! 💈");
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+var agendamentos = app.MapGroup("/agendamentos");
 
-app.MapGet("/weatherforecast", () =>
+agendamentos.MapGet("/horarios-disponiveis", async (int barbeiroId, DateOnly data, AgendamentoService service) =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    var horarios = await service.ListarHorariosDisponiveisAsync(barbeiroId, data);
+    return Results.Ok(horarios);
+});
+
+agendamentos.MapPost("/", async (CriarAgendamentoRequest pedido, AgendamentoService service) =>
+{
+    try
+    {
+        var agendamento = await service.CriarAgendamentoAsync(pedido.ClienteId, pedido.BarbeiroId, pedido.Data, pedido.Hora);
+        return Results.Created($"/agendamentos/{agendamento.Id}", agendamento);
+    }
+    catch (InvalidOperationException erro)
+    {
+        return Results.BadRequest(new { mensagem = erro.Message });
+    }
+});
+
+agendamentos.MapPost("/{id:int}/cancelar", async (int id, AgendamentoService service) =>
+{
+    try
+    {
+        await service.CancelarAgendamentoAsync(id);
+        return Results.NoContent();
+    }
+    catch (InvalidOperationException erro)
+    {
+        return Results.BadRequest(new { mensagem = erro.Message });
+    }
+});
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+record CriarAgendamentoRequest(int ClienteId, int BarbeiroId, DateOnly Data, TimeOnly Hora);
