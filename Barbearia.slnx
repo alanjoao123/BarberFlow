@@ -3,4 +3,7 @@
     <Project Path="src/Barbearia.Api/Barbearia.Api.csproj" />
     <Project Path="src/Barbearia.Web/Barbearia.Web.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Barbearia.Api.Tests/Barbearia.Api.Tests.csproj" />
+  </Folder>
 </Solution>

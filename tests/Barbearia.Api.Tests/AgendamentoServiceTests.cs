@@ -2,6 +2,7 @@ using Barbearia.Api.Data;
 using Barbearia.Api.Models;
 using Barbearia.Api.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Barbearia.Api.Tests;
@@ -17,12 +18,17 @@ public class AgendamentoServiceTests
         return new BarbeariaDbContext(opcoes);
     }
 
+    private static AgendamentoService CriarServiceDeTeste(BarbeariaDbContext contexto)
+    {
+        return new AgendamentoService(contexto, NullLogger<AgendamentoService>.Instance);
+    }
+
     [Fact]
     public async Task ListarHorariosDisponiveis_DeveRetornarListaVazia_QuandoBarbeariaEstaFechada()
     {
         // Arrange
         using var contexto = CriarContextoDeTeste();
-        var service = new AgendamentoService(contexto);
+        var service = CriarServiceDeTeste(contexto);
         var domingo = new DateOnly(2026, 7, 26);
 
         // Act
@@ -37,7 +43,7 @@ public class AgendamentoServiceTests
     {
         // Arrange
         using var contexto = CriarContextoDeTeste();
-        var service = new AgendamentoService(contexto);
+        var service = CriarServiceDeTeste(contexto);
         var sabado = new DateOnly(2026, 7, 25);
 
         // Act
@@ -65,7 +71,7 @@ public class AgendamentoServiceTests
         });
         await contexto.SaveChangesAsync();
 
-        var service = new AgendamentoService(contexto);
+        var service = CriarServiceDeTeste(contexto);
 
         // Act
         var horarios = await service.ListarHorariosDisponiveisAsync(barbeiroId: 1, sabado);
@@ -79,7 +85,7 @@ public class AgendamentoServiceTests
     {
         // Arrange
         using var contexto = CriarContextoDeTeste();
-        var service = new AgendamentoService(contexto);
+        var service = CriarServiceDeTeste(contexto);
         var sabado = new DateOnly(2026, 7, 25);
         var horario = new TimeOnly(10, 15);
 
@@ -109,7 +115,7 @@ public class AgendamentoServiceTests
         });
         await contexto.SaveChangesAsync();
 
-        var service = new AgendamentoService(contexto);
+        var service = CriarServiceDeTeste(contexto);
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -132,7 +138,7 @@ public class AgendamentoServiceTests
         contexto.Agendamentos.Add(agendamento);
         await contexto.SaveChangesAsync();
 
-        var service = new AgendamentoService(contexto);
+        var service = CriarServiceDeTeste(contexto);
 
         // Act
         await service.CancelarAgendamentoAsync(agendamento.Id);
@@ -147,7 +153,7 @@ public class AgendamentoServiceTests
     {
         // Arrange
         using var contexto = CriarContextoDeTeste();
-        var service = new AgendamentoService(contexto);
+        var service = CriarServiceDeTeste(contexto);
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() =>

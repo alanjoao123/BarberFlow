@@ -12,10 +12,12 @@ public class AgendamentoService
     private static readonly DayOfWeek[] DiasFechados = { DayOfWeek.Sunday, DayOfWeek.Monday };
 
     private readonly BarbeariaDbContext _contexto;
+    private readonly ILogger<AgendamentoService> _logger;
 
-    public AgendamentoService(BarbeariaDbContext contexto)
+    public AgendamentoService(BarbeariaDbContext contexto, ILogger<AgendamentoService> logger)
     {
         _contexto = contexto;
+        _logger = logger;
     }
 
     public async Task<List<TimeOnly>> ListarHorariosDisponiveisAsync(int barbeiroId, DateOnly data)
@@ -43,6 +45,9 @@ public class AgendamentoService
 
         if (!horariosDisponiveis.Contains(hora))
         {
+            _logger.LogWarning(
+                "Tentativa de agendamento recusada: barbeiro {BarbeiroId} já ocupado em {Data} às {Hora}",
+                barbeiroId, data, hora);
             throw new InvalidOperationException("Esse horário não está disponível para esse barbeiro.");
         }
 
@@ -58,6 +63,10 @@ public class AgendamentoService
         _contexto.Agendamentos.Add(novoAgendamento);
         await _contexto.SaveChangesAsync();
 
+        _logger.LogInformation(
+            "Agendamento {AgendamentoId} criado: cliente {ClienteId}, barbeiro {BarbeiroId}, {Data} às {Hora}",
+            novoAgendamento.Id, clienteId, barbeiroId, data, hora);
+
         return novoAgendamento;
     }
 
@@ -67,11 +76,14 @@ public class AgendamentoService
 
         if (agendamento is null)
         {
+            _logger.LogWarning("Tentativa de cancelar agendamento inexistente: Id {AgendamentoId}", agendamentoId);
             throw new InvalidOperationException("Agendamento não encontrado.");
         }
 
         agendamento.Status = StatusAgendamento.Cancelado;
         await _contexto.SaveChangesAsync();
+
+        _logger.LogInformation("Agendamento {AgendamentoId} cancelado", agendamentoId);
     }
 
     private static List<TimeOnly> GerarTodosOsHorariosDoDia()
