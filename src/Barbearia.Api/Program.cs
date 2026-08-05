@@ -15,6 +15,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 builder.Services.AddDbContext<BarbeariaDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("BarbeariaDb")));
 
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<AgendamentoService>();
 
 const string PoliticaFrontEnd = "PoliticaFrontEnd";

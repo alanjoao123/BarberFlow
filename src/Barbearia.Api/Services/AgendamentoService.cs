@@ -13,11 +13,13 @@ public class AgendamentoService
 
     private readonly BarbeariaDbContext _contexto;
     private readonly ILogger<AgendamentoService> _logger;
+    private readonly TimeProvider _relogio;
 
-    public AgendamentoService(BarbeariaDbContext contexto, ILogger<AgendamentoService> logger)
+    public AgendamentoService(BarbeariaDbContext contexto, ILogger<AgendamentoService> logger, TimeProvider relogio)
     {
         _contexto = contexto;
         _logger = logger;
+        _relogio = relogio;
     }
 
     public async Task<List<TimeOnly>> ListarHorariosDisponiveisAsync(int barbeiroId, DateOnly data)
@@ -26,6 +28,10 @@ public class AgendamentoService
         {
             return new List<TimeOnly>();
         }
+
+        var agora = _relogio.GetLocalNow();
+        var ehHoje = data == DateOnly.FromDateTime(agora.DateTime);
+        var horaAtual = TimeOnly.FromDateTime(agora.DateTime);
 
         var todosOsHorarios = GerarTodosOsHorariosDoDia();
 
@@ -36,6 +42,7 @@ public class AgendamentoService
 
         return todosOsHorarios
             .Where(horario => !horariosJaOcupados.Contains(horario))
+            .Where(horario => !ehHoje || horario > horaAtual)
             .ToList();
     }
 

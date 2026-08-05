@@ -18,9 +18,17 @@ public class AgendamentoServiceTests
         return new BarbeariaDbContext(opcoes);
     }
 
-    private static AgendamentoService CriarServiceDeTeste(BarbeariaDbContext contexto)
+    private static AgendamentoService CriarServiceDeTeste(BarbeariaDbContext contexto, TimeProvider? relogio = null)
     {
-        return new AgendamentoService(contexto, NullLogger<AgendamentoService>.Instance);
+        return new AgendamentoService(contexto, NullLogger<AgendamentoService>.Instance, relogio ?? TimeProvider.System);
+    }
+
+    private sealed class RelogioFalso : TimeProvider
+    {
+        private readonly DateTimeOffset _agora;
+        public RelogioFalso(DateTimeOffset agora) => _agora = agora;
+        public override DateTimeOffset GetUtcNow() => _agora;
+        public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;
     }
 
     [Fact]
@@ -158,5 +166,24 @@ public class AgendamentoServiceTests
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             service.CancelarAgendamentoAsync(999));
+    }
+
+    [Fact]
+    public async Task ListarHorariosDisponiveis_NaoDeveIncluirHorarioQueJaPassou_QuandoDataEHoje()
+    {
+        // Arrange
+        using var contexto = CriarContextoDeTeste();
+        var agora = new DateTimeOffset(2026, 8, 5, 10, 0, 0, TimeSpan.Zero); // 10h da manhã
+        var relogioFalso = new RelogioFalso(agora);
+        var service = CriarServiceDeTeste(contexto, relogioFalso);
+        var hoje = DateOnly.FromDateTime(agora.DateTime);
+
+        // Act
+        var horarios = await service.ListarHorariosDisponiveisAsync(barbeiroId: 1, hoje);
+
+        // Assert
+        Assert.DoesNotContain(new TimeOnly(8, 0), horarios);
+        Assert.DoesNotContain(new TimeOnly(9, 30), horarios);
+        Assert.Contains(new TimeOnly(11, 0), horarios);
     }
 }
