@@ -1,0 +1,42 @@
+name: Publicar Front-end no GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-e-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Instalar o .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Publicar o front-end Blazor
+        run: dotnet publish src/Barbearia.Web/Barbearia.Web.csproj -c Release -o publicado
+
+      - name: Ajustar o caminho base (subpasta do GitHub Pages)
+        run: sed -i 's|<base href="/" />|<base href="/BarberFlow/" />|g' publicado/wwwroot/index.html
+
+      - name: Evitar que o GitHub ignore pastas com "_" (essencial para o Blazor)
+        run: touch publicado/wwwroot/.nojekyll
+
+      - name: Criar 404.html (necessário para navegação direta em sub-rotas)
+        run: cp publicado/wwwroot/index.html publicado/wwwroot/404.html
+
+      - name: Preparar o site para o GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: publicado/wwwroot
+
+      - name: Publicar no GitHub Pages
+        uses: actions/deploy-pages@v4

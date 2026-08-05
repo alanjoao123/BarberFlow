@@ -22,7 +22,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(PoliticaFrontEnd, policy =>
     {
-        policy.WithOrigins("http://localhost:5057", "https://localhost:7248")
+        policy.WithOrigins("http://localhost:5057", "https://localhost:7248", "https://alanjoao123.github.io")
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
