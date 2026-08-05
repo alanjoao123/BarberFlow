@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debugar Barbearia.Api",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-api",
+            "program": "${workspaceFolder}/src/Barbearia.Api/bin/Debug/net10.0/Barbearia.Api.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/Barbearia.Api",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5114"
+            },
+            "console": "internalConsole"
+        }
+    ]
+}

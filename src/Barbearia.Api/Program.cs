@@ -36,8 +36,6 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
-
 app.UseCors(PoliticaFrontEnd);
 
 app.MapGet("/hello", () => "Olá, mundo! A API da Barbearia está no ar! 💈");
