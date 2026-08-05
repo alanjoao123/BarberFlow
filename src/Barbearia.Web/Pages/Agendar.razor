@@ -30,7 +30,7 @@
 
 <div>
     <label>Data:</label>
-    <input type="date" @bind="dataSelecionada" />
+    <input type="date" @bind="dataSelecionada" min="@hoje.ToString("yyyy-MM-dd")" />
 </div>
 
 <button @onclick="BuscarHorariosAsync">Buscar horários disponíveis</button>
@@ -81,6 +81,8 @@
     private List<ClienteDto> clientes = new();
     private List<TimeOnly> horariosDisponiveis = new();
     private List<AgendamentoDto> agendamentosExistentes = new();
+
+    private readonly DateOnly hoje = DateOnly.FromDateTime(DateTime.Today);
 
     private int barbeiroIdSelecionado;
     private int clienteIdSelecionado;

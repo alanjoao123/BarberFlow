@@ -18,9 +18,13 @@ public class AgendamentoServiceTests
         return new BarbeariaDbContext(opcoes);
     }
 
+    // Um "agora" fixo, sempre antes das datas de teste (2026-07-25/26) — assim os testes
+    // nunca dependem da hora real do computador rodando o teste.
+    private static readonly DateTimeOffset AgoraDeReferencia = new(2026, 7, 1, 6, 0, 0, TimeSpan.Zero);
+
     private static AgendamentoService CriarServiceDeTeste(BarbeariaDbContext contexto, TimeProvider? relogio = null)
     {
-        return new AgendamentoService(contexto, NullLogger<AgendamentoService>.Instance, relogio ?? TimeProvider.System);
+        return new AgendamentoService(contexto, NullLogger<AgendamentoService>.Instance, relogio ?? new RelogioFalso(AgoraDeReferencia));
     }
 
     private sealed class RelogioFalso : TimeProvider
@@ -185,5 +189,22 @@ public class AgendamentoServiceTests
         Assert.DoesNotContain(new TimeOnly(8, 0), horarios);
         Assert.DoesNotContain(new TimeOnly(9, 30), horarios);
         Assert.Contains(new TimeOnly(11, 0), horarios);
+    }
+
+    [Fact]
+    public async Task ListarHorariosDisponiveis_DeveRetornarListaVazia_QuandoDataEDoPassado()
+    {
+        // Arrange
+        using var contexto = CriarContextoDeTeste();
+        var agora = new DateTimeOffset(2026, 8, 5, 10, 0, 0, TimeSpan.Zero);
+        var relogioFalso = new RelogioFalso(agora);
+        var service = CriarServiceDeTeste(contexto, relogioFalso);
+        var ontem = DateOnly.FromDateTime(agora.DateTime).AddDays(-1);
+
+        // Act
+        var horarios = await service.ListarHorariosDisponiveisAsync(barbeiroId: 1, ontem);
+
+        // Assert
+        Assert.Empty(horarios);
     }
 }

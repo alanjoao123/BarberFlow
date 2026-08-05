@@ -30,7 +30,14 @@ public class AgendamentoService
         }
 
         var agora = _relogio.GetLocalNow();
-        var ehHoje = data == DateOnly.FromDateTime(agora.DateTime);
+        var hoje = DateOnly.FromDateTime(agora.DateTime);
+
+        if (data < hoje)
+        {
+            return new List<TimeOnly>();
+        }
+
+        var ehHoje = data == hoje;
         var horaAtual = TimeOnly.FromDateTime(agora.DateTime);
 
         var todosOsHorarios = GerarTodosOsHorariosDoDia();
