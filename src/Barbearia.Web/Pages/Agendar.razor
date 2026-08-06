@@ -33,7 +33,7 @@
     <input type="date" @bind="dataSelecionada" min="@hoje.ToString("yyyy-MM-dd")" />
 </div>
 
-<button @onclick="BuscarHorariosAsync">Buscar horários disponíveis</button>
+<button @onclick="BuscarHorariosAsync" disabled="@buscandoHorarios">Buscar horários disponíveis</button>
 
 @if (horariosDisponiveis.Any())
 {
@@ -117,11 +117,27 @@
         }
     }
 
+    private bool buscandoHorarios;
+
     private async Task BuscarHorariosAsync()
     {
-        var url = $"agendamentos/horarios-disponiveis?barbeiroId={barbeiroIdSelecionado}&data={dataSelecionada:yyyy-MM-dd}";
-        horariosDisponiveis = await Http.GetFromJsonAsync<List<TimeOnly>>(url) ?? new();
-        mensagem = null;
+        if (buscandoHorarios)
+        {
+            return;
+        }
+
+        buscandoHorarios = true;
+        try
+        {
+            var url = $"agendamentos/horarios-disponiveis?barbeiroId={barbeiroIdSelecionado}&data={dataSelecionada:yyyy-MM-dd}";
+            var resultado = await Http.GetFromJsonAsync<List<TimeOnly>>(url) ?? new();
+            horariosDisponiveis = resultado;
+            mensagem = null;
+        }
+        finally
+        {
+            buscandoHorarios = false;
+        }
     }
 
     private async Task MarcarAsync(TimeOnly hora)
