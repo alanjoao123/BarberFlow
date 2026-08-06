@@ -5,9 +5,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 jobs:
   build-e-deploy:
@@ -33,10 +31,8 @@ jobs:
       - name: Criar 404.html (necessário para navegação direta em sub-rotas)
         run: cp publicado/wwwroot/index.html publicado/wwwroot/404.html
 
-      - name: Preparar o site para o GitHub Pages
-        uses: actions/upload-pages-artifact@v3
+      - name: Publicar na branch gh-pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          path: publicado/wwwroot
-
-      - name: Publicar no GitHub Pages
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: publicado/wwwroot
