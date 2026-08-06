@@ -41,7 +41,7 @@
     <div>
         @foreach (var horario in horariosDisponiveis)
         {
-            <button @onclick="() => MarcarAsync(horario)">@horario.ToString("HH:mm")</button>
+            <button @key="horario" @onclick="() => MarcarAsync(horario)">@horario.ToString("HH:mm")</button>
         }
     </div>
 }
@@ -65,7 +65,7 @@
     <tbody>
         @foreach (var agendamento in agendamentosExistentes)
         {
-            <tr>
+            <tr @key="agendamento.Id">
                 <td>@agendamento.Cliente.Nome</td>
                 <td>@agendamento.Barbeiro.Nome</td>
                 <td>@agendamento.Data.ToString("dd/MM/yyyy")</td>

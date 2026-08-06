@@ -177,7 +177,7 @@ public class AgendamentoServiceTests
     {
         // Arrange
         using var contexto = CriarContextoDeTeste();
-        var agora = new DateTimeOffset(2026, 8, 5, 10, 0, 0, TimeSpan.Zero); // 10h da manhã
+        var agora = new DateTimeOffset(2026, 8, 5, 13, 0, 0, TimeSpan.Zero); // 13h UTC = 10h da manhã em São Paulo (UTC-3)
         var relogioFalso = new RelogioFalso(agora);
         var service = CriarServiceDeTeste(contexto, relogioFalso);
         var hoje = DateOnly.FromDateTime(agora.DateTime);

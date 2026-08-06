@@ -11,6 +11,10 @@ public class AgendamentoService
     private static readonly TimeSpan DuracaoAtendimento = TimeSpan.FromMinutes(45);
     private static readonly DayOfWeek[] DiasFechados = { DayOfWeek.Sunday, DayOfWeek.Monday };
 
+    // A barbearia fica no Brasil — usamos esse fuso horário fixo, não importa
+    // em qual fuso o servidor esteja rodando de verdade (o Render usa UTC).
+    private static readonly TimeZoneInfo FusoHorarioDaBarbearia = TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
+
     private readonly BarbeariaDbContext _contexto;
     private readonly ILogger<AgendamentoService> _logger;
     private readonly TimeProvider _relogio;
@@ -29,7 +33,7 @@ public class AgendamentoService
             return new List<TimeOnly>();
         }
 
-        var agora = _relogio.GetLocalNow();
+        var agora = TimeZoneInfo.ConvertTime(_relogio.GetUtcNow(), FusoHorarioDaBarbearia);
         var hoje = DateOnly.FromDateTime(agora.DateTime);
 
         if (data < hoje)
