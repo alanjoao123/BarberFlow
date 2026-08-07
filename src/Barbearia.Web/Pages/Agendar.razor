@@ -35,15 +35,22 @@
 
 <button @onclick="BuscarHorariosAsync" disabled="@buscandoHorarios">Buscar horários disponíveis</button>
 
-@if (horariosDisponiveis.Any())
+@if (jaBuscouHorarios)
 {
-    <h3>Horários disponíveis:</h3>
-    <div>
-        @foreach (var horario in horariosDisponiveis)
-        {
-            <button @key="horario" @onclick="() => MarcarAsync(horario)">@horario.ToString("HH:mm")</button>
-        }
-    </div>
+    @if (horariosDisponiveis.Any())
+    {
+        <h3>Horários disponíveis:</h3>
+        <div>
+            @foreach (var horario in horariosDisponiveis)
+            {
+                <button @key="horario" @onclick="() => MarcarAsync(horario)">@horario.ToString("HH:mm")</button>
+            }
+        </div>
+    }
+    else
+    {
+        <p><strong>Nenhum horário disponível nessa data (a barbearia pode estar fechada, ou os horários do dia já passaram).</strong></p>
+    }
 }
 
 @if (mensagem is not null)
@@ -118,6 +125,7 @@
     }
 
     private bool buscandoHorarios;
+    private bool jaBuscouHorarios;
 
     private async Task BuscarHorariosAsync()
     {
@@ -127,11 +135,19 @@
         }
 
         buscandoHorarios = true;
+
+        // Limpa a lista antiga e força a tela a atualizar ANTES de buscar a nova,
+        // para nunca misturar botões de uma busca anterior com os da busca atual.
+        horariosDisponiveis = new();
+        jaBuscouHorarios = false;
+        StateHasChanged();
+
         try
         {
             var url = $"agendamentos/horarios-disponiveis?barbeiroId={barbeiroIdSelecionado}&data={dataSelecionada:yyyy-MM-dd}";
             var resultado = await Http.GetFromJsonAsync<List<TimeOnly>>(url) ?? new();
             horariosDisponiveis = resultado;
+            jaBuscouHorarios = true;
             mensagem = null;
         }
         finally
